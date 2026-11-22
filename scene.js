@@ -1,3 +1,7 @@
+import {finishHallWall, furnishHall} from './hall.js';
+import {roomMirrors} from './mirrors.js';
+import {finishBathroomWall, furnishBathroom} from './bathroom.js';
+import {finishNurseryWall, furnishNursery, nurseryBed, nurserySofa, nurseryDesk} from './nursery.js';
 import {finishLivingWall, furnishDayRoom, furnishSofa, coffeeTable} from './living.js';
 import {furnishKitchen} from './kitchen.js';
 import * as T from 'three';
@@ -52,8 +56,9 @@ for (const [id, room] of Object.entries(rooms)) {
 const roomFloors = Object.fromEntries(Object.entries(roomGroups).map(([id, group]) => [id, [...group.children]]));
 
 const walls = [];
-const parts = {box,cyl,mesh};
-const livingCut = new T.Plane(new T.Vector3(0,-1,0),2.7);
+const mirrors = roomMirrors(mesh);
+const parts = {box,cyl,mesh,mirror:mirrors.add};
+const wallCut = new T.Plane(new T.Vector3(0,-1,0),2.7);
 renderer.localClippingEnabled = true;
 function wall(ids, x,z,X,Z, thickness=.14, window=false, finish='') {
   const group = new T.Group();
@@ -63,15 +68,16 @@ function wall(ids, x,z,X,Z, thickness=.14, window=false, finish='') {
   group.position.set((x+X)/2,0,(z+Z)/2);
   group.rotation.y = -Math.atan2(Z-z,X-x);
   const panel = box(0,0,length,thickness,1,window?oak:0xded6c7);
+  const fixedWindow = window && (ids === 'living' || ids === 'nursery');
   const frame = new T.Group();
-  if (window && !ids.includes('living')) {
+  if (window && !fixedWindow) {
     group.add(frame);
     furnitureParent = frame;
     box(0,0,length,.045,.045,white,.64);
     for (const offset of [-length/2,0,length/2]) box(offset,0,.045,.045,.47,white,.21);
   }
   let glazing, lintel;
-  if (window && !ids.includes('living')) {
+  if (window && !fixedWindow) {
     glazing = box(0,0,length-.02,.012,.43,0xd9e3de,.215);
     glazing.material.transparent = true;
     glazing.material.opacity = .38;
@@ -80,11 +86,11 @@ function wall(ids, x,z,X,Z, thickness=.14, window=false, finish='') {
     furnitureParent = group;
     lintel = box(0,0,length,thickness,1,0xded6c7);
   }
-  if (window && ids === 'living') {
+  if (fixedWindow) {
     furnitureParent = group;
     lintel = box(0,0,length,thickness,.16,0xded6c7,2.54);
   }
-  walls.push({group,panel,frame,glazing,lintel,thickness,finish,ids:ids.split(' '),window,dx:X-x,dz:Z-z});
+  walls.push({group,panel,frame,glazing,lintel,thickness,finish,fixedWindow,ids:ids.split(' '),window,dx:X-x,dz:Z-z});
 }
 // Split continuous walls at room boundaries so both adjacent rooms retain their own shared wall.
 wall('living',1.49,0,3.55,0,.18,true,'frontWindow');
@@ -92,10 +98,11 @@ wall('living',3.55,0,5.38,0,.14,false,'heating');
 wall('nursery',5.38,0,6.52,0);
 wall('nursery',6.52,0,8.18,0,.18,true);
 wall('nursery',8.18,0,8.87,0);
-wall('nursery',8.87,0,8.87,4.45);
-wall('hall',8.87,4.45,8.87,6.85);
-wall('hall',8.87,7.77,7.12,7.77);
-wall('bath',7.12,7.77,4.23,7.77);
+wall('nursery',8.87,0,8.87,4.45,.14,false,'pattern');
+wall('hall',8.87,4.45,8.87,6.85,.14,false,'entrySide');
+wall('hall',8.87,6.85,8.87,7.77,.14,false,'frontDoor');
+wall('hall',8.87,7.77,7.12,7.77,.14,false,'hallEnd');
+wall('bath',7.12,7.77,4.23,7.77,.14,false,'bathBack');
 wall('kitchen',4.23,7.77,0,7.77);
 wall('kitchen',0,7.77,0,7.5);
 wall('kitchen',0,7.5,0,5.7,.16,true);
@@ -106,15 +113,17 @@ wall('living',1.49,4.45,1.49,.85);
 wall('living',1.49,.85,1.49,0,.18,true);
 wall('living kitchen',1.49,4.45,4.23,4.45,.1);
 wall('living hall',4.23,4.45,4.55,4.45,.1);
-wall('nursery hall',6.32,4.45,8.87,4.45,.1);
+wall('nursery hall',6.32,4.45,8.87,4.45,.1,false,'map');
 wall('living nursery',5.38,0,5.38,3.85,.25,false,'media');
-wall('living',5.38,3.85,5.18,4.04);
+wall('living hall',5.38,3.85,5.18,4.04);
 wall('living hall',4.55,4.45,5.18,4.04,.10,false,'entry');
-wall('nursery',5.38,3.85,5.58,4.04);
+wall('nursery hall',5.38,3.85,5.58,4.04);
+wall('nursery hall',5.58,4.04,6.32,4.45,.10,false,'entry');
 wall('kitchen bath',4.23,7.77,4.23,5.83,.1);
 wall('bath hall',4.23,5.83,5.28,5.83,.1);
 wall('bath hall',6.14,5.83,7.12,5.83,.1);
-wall('bath hall',7.12,5.83,7.12,7.77,.1);
+wall('bath hall',7.12,5.83,7.12,7.77,.1,false,'laundry');
+wall('bath hall',6.14,5.83,5.28,5.83,.1,false,'entry');
 function plant(x,z,s=1,y=0){cyl(x,z,.18*s,.35*s,0xaf7758,y,.13*s);for(let i=0;i<13;i++){let a=i*2.4,m=mesh(new T.SphereGeometry(1,9,8),x+.13*s*Math.cos(a),y+s*(.48+i%3*.1),z+.13*s*Math.sin(a),[0x58724a,0x728455,0x909665][i%3]);m.scale.set(.085*s,.24*s,.065*s);m.rotation.z=-.6*Math.cos(a);m.rotation.x=.6*Math.sin(a)}}
 const dayRoom=new T.Group();
 roomGroups.living.add(dayRoom);
@@ -134,34 +143,27 @@ box(-.075,-.61,.019,.127,.021,0x797d7a,.97,.005);
 const originalFurniture=new T.Group();
 const trialFurniture=new T.Group();
 roomGroups.living.add(originalFurniture,trialFurniture);
-function childBed(x,z){
-  box(x,z,1.02,2.05,.30,oak,.07,.04);
-  box(x,z,.96,1.98,.19,white,.37,.06);
-  box(x,z+.26,.98,1.44,.09,0xa0b3a1,.55,.04);
-  box(x,z-.70,.66,.38,.12,cream,.55,.06);
-}
 furnitureParent=originalFurniture;
 furnishSofa(parts,false);
 coffeeTable(parts,3.34,2.49);
-const originalBed = new T.Group();
-roomGroups.nursery.add(originalBed);
-furnitureParent = originalBed;
-childBed(7.36,1.39);
 furnitureParent=trialFurniture;
 furnishSofa(parts,true);
 coffeeTable(parts,3.65,1.03);
-const study=new T.Group();
-roomGroups.nursery.add(study);
-furnitureParent=study;
-childBed(8.20,2.56);
-box(7.22,.48,1.46,.64,.05,oak,.74,.015);
-for(const x of [6.58,7.86])for(const z of [.23,.72])box(x,z,.06,.06,.74,oak);
-box(7.21,1.06,.43,.44,.08,green,.43,.035);
-box(7.21,1.25,.43,.06,.37,green,.49,.025);
-for(const x of [7.05,7.37])for(const z of [.90,1.21])box(x,z,.035,.035,.43,oak);
-box(7.10,.52,.28,.20,.025,cream,.79);
-plant(7.75,.42,.38,.79);
-study.visible=false;
+// The same pieces serve both nursery arrangements. Only their poses change.
+furnitureParent=roomGroups.nursery;
+furnishNursery(parts);
+function nurseryPiece(build) {
+  const piece=new T.Group();
+  roomGroups.nursery.add(piece);
+  furnitureParent=piece;
+  build(parts);
+  return piece;
+}
+const nurseryPieces=[
+  {item:nurseryPiece(nurseryBed), original:[7.765,3.65,0], study:[8.06,2.03,Math.PI/2]},
+  {item:nurseryPiece(nurserySofa), original:[8.37,1.98,0], study:[7.50,3.975,-Math.PI/2]},
+  {item:nurseryPiece(nurseryDesk), original:[7.13,1.34,.08], study:[7.03,.54,Math.PI]}
+];
 trialFurniture.visible=false;
 const suite=new T.Group();
 roomGroups.living.add(suite);
@@ -310,21 +312,20 @@ const guide=new T.LineLoop(new T.BufferGeometry().setFromPoints(triangle),new T.
 guide.computeLineDistances();
 stereo.add(guide);
 for(const vertex of triangle)mesh(new T.SphereGeometry(.027,16,8),vertex.x,vertex.y,vertex.z,0x176467);
-furnitureParent=roomGroups.nursery;
-box(7.74,4.12,1.2,.44,.84,oak,.02,.02);
 furnitureParent=roomGroups.kitchen;
 furnishKitchen({box,cyl,mesh});
 furnitureParent=roomGroups.bath;
-box(4.72,6.86,.77,1.65,.48,white,.04,.11);box(4.72,6.86,.59,1.41,.05,0xc2cfca,.49,.15);box(5.76,7.38,.75,.56,.77,oak);cyl(5.76,7.38,.24,.14,white,.77);box(6.69,7.53,.45,.22,.66,white,.04,.05);let wc=cyl(6.69,7.19,.25,.39,white,.04);wc.scale.z=1.35;box(6.73,6.26,.59,.59,.84,white);
+furnishBathroom(parts);
 furnitureParent=roomGroups.hall;
-box(8.45,5.41,.52,1.45,.47,oak);box(8.45,5.41,.53,1.37,.09,green,.47,.04);plant(8.45,6.49,.8);
+furnishHall(parts);
 const ground=new T.Mesh(new T.PlaneGeometry(200,200),new T.ShadowMaterial({opacity:.10}));ground.rotation.x=-Math.PI/2;ground.position.y=-.22;ground.receiveShadow=true;scene.add(ground);
 
 const byId = id => document.getElementById(id);
 const heightControl = byId('height');
 const layoutControl = byId('layout');
 const layouts = {original:originalFurniture, trial:trialFurniture, suite, stereo, projector:projectionRoom, 'sofa-right':sofaRight, 'sofa-window':sofaWindow};
-let activeRoom = 'living';
+const requestedRoom = new URLSearchParams(location.search).get('room');
+let activeRoom = Object.hasOwn(rooms,requestedRoom) ? requestedRoom : 'living';
 let angle = rooms.living.angle, pitch = .57, zoom = 1;
 const overviewCut = {all: .95, room: 2.4};
 const cards = new Map();
@@ -358,28 +359,34 @@ for (const wall of walls) {
   const {x,z} = wall.group.position;
   wall.normals = {};
   for (const id of wall.ids) {
-    const sign = contains(rooms[id].points,x+nx*.015,z+nz*.015) ? -1 : 1;
+    const insideOnLeft = contains(rooms[id].points,x+nx*.015,z+nz*.015);
+    const sign = insideOnLeft ? -1 : 1;
     wall.normals[id] = [nx*sign,nz*sign];
   }
-  if (wall.ids.includes('living')) {
+  wall.finishes = [];
+  for (const id of wall.ids) {
+    if (id === 'hall' && wall.finish === 'entry') continue; // Shared doorway trim belongs to the adjoining room.
+    const finish = {living:finishLivingWall,nursery:finishNurseryWall,bath:finishBathroomWall,hall:finishHallWall}[id];
+    if (!finish) continue;
     const decor = new T.Group();
     wall.group.add(decor);
-    const [outX,outZ] = wall.normals.living;
+    const [outX,outZ] = wall.normals[id];
     decor.scale.z = -(outX*nx + outZ*nz);
     furnitureParent = decor;
     if (wall.finish === 'entry') {
-      for (const edge of [-1,1]) box(edge*(length/2-.013),0,.036,.13,2.065,white,0);
-      box(0,0,length,.13,.051,white,2.015);
+      const trim = id === 'nursery' ? 0xb19e86 : white;
+      for (const edge of [-1,1]) box(edge*(length/2-.013),0,.036,.13,2.065,trim,0);
+      box(0,0,length,.13,.051,trim,2.015);
     } else {
-      finishLivingWall(parts,length,wall.thickness/2,wall.finish,wall.window);
+      finish(parts,length,wall.thickness/2,wall.finish,wall.window);
     }
     decor.traverse(child => {
       if (child.isMesh) {
-        child.material.clippingPlanes = [livingCut];
+        child.material.clippingPlanes = [wallCut];
         child.material.clipShadows = true;
       }
     });
-    wall.livingDecor = decor;
+    wall.finishes.push({id,decor});
   }
 }
 
@@ -393,15 +400,17 @@ function draw(id, azimuth, elevation, magnification, cut, w, h, preview=false) {
   cam.position.set(x+20*Math.sin(azimuth)*Math.cos(elevation),targetY+20*Math.sin(elevation),z+20*Math.cos(azimuth)*Math.cos(elevation));
   cam.lookAt(x,targetY,z);
   cam.updateProjectionMatrix();
-  livingCut.constant = cut;
+  wallCut.constant = cut;
   for (const wall of walls) {
     if (!wall.group.visible) continue;
     const normal = wall.normals[id];
     const facing = normal && normal[0]*Math.sin(azimuth)+normal[1]*Math.cos(azimuth) > .02;
     const open = !isPlan && facing;
     let wallHeight = open ? Math.min(cut,.13) : cut;
-    if (wall.livingDecor) wall.livingDecor.visible = (id === 'living' || whole) && !open;
-    if (wall.window && wall.livingDecor) {
+    for (const finish of wall.finishes) {
+      finish.decor.visible = !open && (whole || id === finish.id || wall.finish === 'entry');
+    }
+    if (wall.fixedWindow) {
       wallHeight = Math.min(wallHeight,.75);
       wall.panel.material.color.setHex(0xded6c7);
       wall.lintel.visible = !open && cut > 2.54;
@@ -424,17 +433,17 @@ function draw(id, azimuth, elevation, magnification, cut, w, h, preview=false) {
     }
     wall.panel.scale.y = wallHeight;
     wall.panel.position.y = wallHeight/2;
-    if (wall.finish === 'entry') {
+    if (wall.finish === 'entry' || wall.finish === 'frontDoor') {
       const headerHeight = Math.max(0,wallHeight-2.065);
       wall.panel.visible = headerHeight>0;
       wall.panel.scale.y = headerHeight;
       wall.panel.position.y = 2.065+headerHeight/2;
-      wall.livingDecor.visible = !open;
     }
   }
   orbit.visible = !whole && !isPlan && !preview;
   orbit.position.set(x,-.205,z);
   orbit.scale.setScalar(room.span*.51);
+  if (!isPlan) mirrors.render(renderer,scene,cam,id,cut);
   renderer.render(scene,cam);
 }
 function render() {
@@ -450,7 +459,7 @@ function render() {
 function selectRoom(id) {
   activeRoom = id;
   angle = rooms[id].angle;
-  pitch = id === 'all' ? .85 : .57;
+  pitch = rooms[id].pitch ?? .57;
   zoom = 1;
   heightControl.value = overviewCut[id==='all' ? 'all' : 'room'];
   canvas.setAttribute('aria-label','Модель — '+rooms[id].name);
@@ -468,7 +477,7 @@ function refreshPreviews(ids) {
   renderer.setPixelRatio(1);
   for (const id of ids) {
     showRoom(id);
-    draw(id,rooms[id].angle,id==='all'?.87:.62,1,id==='all'?.95:2.15,300,204,true);
+    draw(id,rooms[id].angle,(rooms[id].pitch ?? .60)+.02,1,id==='all'?.95:2.15,300,204,true);
     cards.get(id).querySelector('img').src = canvas.toDataURL('image/png');
   }
   renderer.setPixelRatio(ratio);
@@ -489,9 +498,12 @@ for (const id of ['living','nursery','kitchen','hall','bath','all']) {
 
 function selectLayout(id) {
   for (const [key,group] of Object.entries(layouts)) group.visible = key===id;
-  originalBed.visible = id==='original';
-  study.visible = !originalBed.visible;
-  dayRoom.visible = originalBed.visible || id==='trial';
+  for (const piece of nurseryPieces) {
+    const [x,z,angle] = id==='original' ? piece.original : piece.study;
+    piece.item.position.set(x,0,z);
+    piece.item.rotation.y=angle;
+  }
+  dayRoom.visible = id==='original' || id==='trial';
   byId('stereoMetrics').hidden = !(stereo.visible && (activeRoom==='all' || activeRoom==='living'));
   layoutControl.value = id;
 }
@@ -511,7 +523,7 @@ function scale(factor) {
 byId('plus').onclick = () => scale(1.2);
 byId('minus').onclick = () => scale(1/1.2);
 byId('reset').onclick = () => selectRoom(activeRoom);
-byId('iso').onclick = () => { angle=rooms[activeRoom].angle; pitch=activeRoom==='all'?.85:.57; render() };
+byId('iso').onclick = () => { angle=rooms[activeRoom].angle; pitch=rooms[activeRoom].pitch ?? .57; render() };
 byId('topview').onclick = () => { angle=0; pitch=Math.PI/2-.001; render() };
 byId('rotate').onclick = () => { angle+=Math.PI/4; render() };
 heightControl.oninput = () => {

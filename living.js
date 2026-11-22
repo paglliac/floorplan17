@@ -1,5 +1,5 @@
 // Living room, IMG_2343–2348. The corner window is at low X / low Z.
-// Furniture sizes are estimates within the room axes from the plan.
+// The sofa footprint follows its dimension drawing. Other furniture sizes are estimated from photos.
 import * as T from 'three';
 
 const graphite = 0x696b72, charcoal = 0x202127, timber = 0x9d714e;
@@ -213,6 +213,20 @@ function media(parts) {
   for (const z of [center-.695,center,center+.695]) box(5.025,z,.42,.035,.57,charcoal,.153);
   box(5.21,center,.025,1.40,.57,charcoal,.153);
   box(4.807,center-.355,.035,.685,.605,0xb68e65,.12);
+  const veneer=texture(256,256,ctx=>{
+    ctx.fillStyle='#b89569';
+    ctx.fillRect(0,0,256,256);
+    for(let i=-140;i<390;i+=2) {
+      ctx.strokeStyle=i%6 ? 'rgba(105,72,45,.14)' : 'rgba(245,225,200,.22)';
+      ctx.beginPath();
+      ctx.moveTo(0,i+100);
+      ctx.lineTo(127,i);
+      ctx.lineTo(256,i+96);
+      ctx.stroke();
+    }
+  });
+  const front=mappedPanel(parts,veneer,4.788,center-.355,.681,.601,.122,.681,.601);
+  front.rotation.y=-Math.PI/2;
   box(5.02,center+.35,.40,.665,.025,charcoal,.491);
   for (let i=0;i<25;i++) box(4.99,center+.049+i*.024,.30,.019,.29+(i%4)*.009,[0xad9c87,0x575457,0xd3c7b1,0x85756e][i%4],.155);
   box(4.99,center+.35,.32,.56,.14,0x303134,.519,.01);
@@ -288,28 +302,44 @@ function floorLamp(parts) {
 }
 
 export function furnishSofa(parts, unfolded) {
-  const {box}=parts, start=.70, end=3.02, middle=(end+start)/2;
-  const feet = [[1.72,start+.14],[1.72,end-.14],
-    [unfolded?3.13:2.96,start+.22],[unfolded?3.13:2.47,end-.22]];
-  for (const [x,z] of feet) leg(parts,[x,.014,z],[x,.22,z],.022,0x714e39,.032);
-  box(2.07,middle,.92,end-start,.23,moss,.15,.055);
-  box(1.73,middle,.21,end-start-.07,.56,moss,.23,.06);
-  for (const z of [start+.08,end-.08]) box(2.09,z,.98,.16,.50,moss,.16,.065);
-  const seam=1.85;
-  for (const [z,w] of [[(start+.16+seam)/2,seam-start-.16],[(end-.16+seam)/2,end-.16-seam]]) {
-    const cushion=box(1.82,z,.235,w-.01,.43,moss,.475,.078);
+  const {box}=parts;
+  // Drawing dimensions in metres. Z runs along the wall, X towards the TV.
+  const width=2.50, sleepingLength=1.96, depth=1.05, chaiseDepth=1.55;
+  const backX=1.60, centerZ=1.86;
+  const arm=(width-sleepingLength)/2;
+  const frontX=backX+depth, chaiseFrontX=backX+chaiseDepth;
+  const seatBackX=backX+.24, halfSeat=sleepingLength/2;
+
+  box(backX+depth/2,centerZ,depth,width,.23,moss,.15,.055);
+  box(backX+.11,centerZ,.22,width-.07,.56,moss,.23,.06);
+  for (const side of [-1,1]) {
+    const armZ=centerZ+side*(width-arm)/2;
+    box(backX+depth/2,armZ,depth,arm,.50,moss,.16,.065);
+    const seatZ=centerZ+side*halfSeat/2;
+    const cushion=box(backX+.22,seatZ,.235,halfSeat-.01,.43,moss,.475,.078);
     cushion.rotation.z=.14;
+
+    const extended=unfolded || side<0;
+    const edgeX=extended ? chaiseFrontX : frontX;
+    const footZ=centerZ+side*(halfSeat-.075);
+    for (const x of [backX+.10,edgeX-.08]) {
+      leg(parts,[x,.014,footZ],[x,.22,footZ],.022,0x714e39,.032);
+    }
+    if (extended) {
+      const extension=chaiseDepth-depth;
+      box(frontX+extension/2,seatZ,extension,halfSeat,.23,moss,.15,.045);
+    }
+    if (!unfolded) {
+      box((seatBackX+edgeX)/2,seatZ,edgeX-seatBackX,halfSeat-.005,.15,moss,.37,.065);
+    }
   }
   if (unfolded) {
-    box(2.60,middle,1.30,1.99,.22,moss,.15,.045);
-    box(2.60,middle,1.32,1.99,.14,0xe3e1d7,.37,.05);
-    box(2.60,middle+.28,1.33,1.41,.045,0xa6b3a2,.51,.024);
-    for (const x of [2.26,2.93]) box(x,start+.42,.54,.33,.10,ivory,.51,.05);
-  } else {
-    const nearWindow=(start+.16+seam)/2;
-    box(2.44,nearWindow,1.24,seam-start-.16,.27,moss,.15,.06);
-    box(2.44,nearWindow,1.24,seam-start-.16,.105,moss,.40,.047);
-    box(2.19,(seam+end-.16)/2,.74,end-.16-seam,.15,moss,.35,.065);
+    const bedDepth=chaiseFrontX-seatBackX, bedX=(seatBackX+chaiseFrontX)/2;
+    box(bedX,centerZ,bedDepth,sleepingLength,.14,0xe3e1d7,.38,.05);
+    box(bedX,centerZ+.27,bedDepth,sleepingLength-.54,.045,0xa6b3a2,.52,.024);
+    for (const side of [-1,1]) {
+      box(bedX+side*bedDepth/4,centerZ-halfSeat+.21,.53,.33,.10,ivory,.52,.05);
+    }
   }
 }
 
