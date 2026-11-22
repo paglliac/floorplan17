@@ -1,0 +1,92 @@
+:root {
+  color-scheme: light;
+  font: 14px/1.3 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  color: #211f1d;
+  --paper: #fffefa;
+  --ink: #242321;
+  --muted: #696661;
+}
+* { box-sizing: border-box }
+body { margin: 0; background: #f8f7f3 }
+button, select, input { font: inherit; color: inherit }
+button, select { cursor: pointer }
+button { background: none; border: 0 }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #8b613a; outline-offset: 2px }
+svg { width: 17px; height: 17px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round }
+.definitions { position: absolute; width: 0; height: 0 }
+.workspace {
+  margin: 12px; height: calc(100dvh - 24px); min-height: 460px;
+  display: grid; grid-template: auto minmax(0,1fr) / minmax(0,1fr) clamp(260px,28vw,378px);
+  gap: 18px; padding: 18px; border: 1.5px solid #35332f; border-radius: 25px;
+  background-color: #eeeae3;
+  background-image: radial-gradient(#c8c1b666 .65px,transparent .8px); background-size: 12px 12px;
+}
+header { grid-column: 1/-1; display: flex; align-items: center; gap: 9px }
+.brand, .project, .switch, .layout, .zoom, #rotate, .cut, aside h2, #stereoMetrics {
+  background: var(--paper); border-radius: 28px; display: flex; align-items: center;
+}
+.brand, .project { min-height: 44px; padding: 0 18px; gap: 10px }
+.brand { font-size: 18px; font-weight: 750; letter-spacing: -.065em }
+.brand svg { width: 22px; height: 22px; stroke-width: 2.1 }
+.project { gap: 12px }
+h1, h2 { margin: 0; font-size: 14px; font-weight: 610; letter-spacing: -.02em }
+.project span { color: var(--muted); font-variant-numeric: tabular-nums; padding-left: 12px; border-left: 1px solid #dedbd4 }
+.stage { display: grid; grid-template-rows: auto minmax(0,1fr) auto; min-width: 0; min-height: 0 }
+.stage-head, .stage-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px }
+.switch, .zoom { padding: 3px }
+.switch button, .zoom button, #rotate { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 28px; min-height: 37px; font-weight: 540 }
+.switch button { padding: 0 15px }
+button:hover, .layout:hover { background-color: #e4e0d9 }
+.switch button[aria-pressed=true], .layout { color: white; background-color: var(--ink) }
+.layout { padding-left: 15px; position: relative }
+.layout:hover { background-color: #363430 }
+.layout::after { content: ''; width: 6px; height: 6px; position: absolute; right: 16px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: translateY(-2px) rotate(45deg); pointer-events: none }
+select { border: 0; background: transparent; color: inherit; appearance: none; padding: 0 34px 0 9px; height: 43px; border-radius: 26px; width: 100% }
+option { background: var(--paper); color: var(--ink) }
+.viewport { position: relative; min-height: 0 }
+#model { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none }
+#model:active { cursor: grabbing }
+#stereoMetrics { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); padding: 6px 14px; gap: 6px; font-size: 12px; white-space: nowrap }
+#stereoMetrics i { border-left: 1px solid #d9d5ca; height: 12px; margin: 0 3px }
+[hidden] { display: none !important }
+.zoom button { width: 33px; font-size: 18px }
+.zoom svg, .cut svg { width: 16px }
+#rotate { padding: 0 15px; min-height: 42px }
+.cut { height: 43px; padding: 0 14px; gap: 8px }
+.cut input { width: clamp(52px,6vw,90px); height: 4px; accent-color: var(--ink); cursor: pointer }
+aside { display: flex; flex-direction: column; min-height: 0; gap: 12px }
+aside h2 { min-height: 43px; padding: 0 18px }
+#rooms { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; align-content: start; overflow-y: auto; scrollbar-width: thin; padding: 2px }
+.room {
+  position: relative; display: flex; flex-direction: column; min-width: 0; text-align: left; padding: 4px 4px 12px;
+  border: 2px solid var(--paper); border-radius: 18px; background: #f9f8f4;
+}
+.room:hover { background: #fffdfa; border-color: #bfb9af }
+.room[aria-pressed=true] { border-color: var(--ink); background: #fffefa }
+.room img { width: 100%; aspect-ratio: 1.45; object-fit: contain; display: block }
+.room-name, .area { margin-left: 8px }
+.room-name { font-size: 14px; font-weight: 630; letter-spacing: -.03em }
+.area { margin-top: 3px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums }
+.marker { position: absolute; right: 8px; bottom: 10px; display: grid; place-items: center; border-radius: 50%; background: #ece9e2; width: 23px; height: 23px }
+.marker svg { width: 13px; height: 13px }
+.room[aria-pressed=true] .marker { background: var(--ink); color: white }
+@media(max-width: 740px) {
+  .workspace { margin: 5px; height: calc(100dvh - 10px); min-height: 510px; padding: 12px; gap: 12px; border-radius: 20px; grid-template: auto minmax(0,1fr) auto / minmax(0,1fr) }
+  header { gap: 5px }
+  .brand, .project { min-height: 38px; padding: 0 10px; gap: 6px }
+  .project svg { display: none }
+  .project span { font-size: 12px; padding-left: 6px }
+  h1 { font-size: 13px }
+  aside { gap: 4px }
+  aside h2 { min-height: auto; padding: 1px 3px; background: none; font-size: 13px }
+  #rooms { display: flex; overflow-x: auto; scrollbar-width: thin; gap: 6px }
+  .room { width: 115px; flex: none; padding-bottom: 9px; border-radius: 13px }
+  .room img { height: 64px }
+  .room-name { font-size: 13px }
+  .switch button { padding: 0 11px }
+  .cut { padding: 0 9px; gap: 6px }
+  .cut svg { display: none }
+  .zoom button { width: 29px }
+  #rotate { padding: 0 9px }
+}
+@media(max-width: 390px) { .project span { display: none } .layout { padding-left: 9px } select { max-width: 151px } }

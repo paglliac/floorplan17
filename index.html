@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eeeae3">
+  <title>Форма · Двухкомнатная квартира</title>
+  <link rel="stylesheet" href="./viewer.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+</head>
+<body>
+  <svg class="definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <symbol id="cube" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 10 9-5M12 12 3 7m9 5v10"/></symbol>
+      <symbol id="plan" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 13h7m4 0h7M12 3v6m0 7v5"/></symbol>
+      <symbol id="layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></symbol>
+      <symbol id="fit" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></symbol>
+      <symbol id="walls" viewBox="0 0 24 24"><path d="M3 20V6l8-3 10 4v13M11 3v14m-8 3 8-3 10 3"/></symbol>
+      <symbol id="orbit" viewBox="0 0 24 24"><path d="M8 6c-3.2.8-5.5 2.8-5.5 5.2 0 3.3 4.3 5.8 9.5 5.8s9.5-2.5 9.5-5.8c0-2.3-2.1-4.3-5.1-5.1M9 14l3 3-3 3"/></symbol>
+      <symbol id="arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M7 6h11v11"/></symbol>
+      <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    </defs>
+  </svg>
+  <main class="workspace">
+    <header>
+      <div class="brand"><svg><use href="#cube"/></svg>Форма</div>
+      <div class="project"><svg><use href="#plan"/></svg><h1>Двухкомнатная квартира</h1><span>58,5 м²</span></div>
+    </header>
+    <section class="stage" aria-label="Просмотр модели">
+      <div class="stage-head">
+        <div class="switch" role="group" aria-label="Ракурс">
+          <button id="iso" aria-pressed="true"><svg><use href="#cube"/></svg>3D</button>
+          <button id="topview" aria-pressed="false"><svg><use href="#plan"/></svg>Сверху</button>
+        </div>
+        <label class="layout" title="Выбрать расстановку"><svg><use href="#layers"/></svg>
+          <select id="layout" aria-label="Расстановка">
+            <option value="original">Базовая</option><option value="trial">Пробная</option>
+            <option value="suite">Кровать и кино</option><option value="stereo">Стереотреугольник</option>
+            <option value="projector">Кровать и проектор</option><option value="sofa-right">Диван справа</option>
+            <option value="sofa-window">Диван у окна</option>
+          </select>
+        </label>
+      </div>
+      <div class="viewport">
+        <canvas id="model" aria-label="Модель гостиной"></canvas>
+        <div id="stereoMetrics" hidden>Сторона <b>1,60 м</b><i></i>Угол <b>60°</b></div>
+      </div>
+      <div class="stage-foot">
+        <div class="zoom"><button id="minus" aria-label="Отдалить" title="Отдалить">−</button><button id="reset" title="Вписать модель" aria-label="Вписать модель"><svg><use href="#fit"/></svg></button><button id="plus" aria-label="Приблизить" title="Приблизить">+</button></div>
+        <button id="rotate" title="Повернуть на 45°" aria-label="Повернуть на 45°"><svg><use href="#orbit"/></svg>360°</button>
+        <label class="cut" title="Высота среза стен"><svg><use href="#walls"/></svg><span>Стены</span><input id="height" type="range" min=".15" max="2.7" step=".05" value="2.4" aria-label="Высота среза стен"></label>
+      </div>
+    </section>
+    <aside aria-label="Выбор помещения">
+      <h2>Помещения</h2>
+      <div id="rooms" role="group" aria-label="Помещения"></div>
+    </aside>
+  </main>
+  <script type="module" src="./scene.js"></script>
+</body>
+</html>
